@@ -1,0 +1,180 @@
+{
+    "courses": [
+        {
+            "organization": "ecomm-test-courses",
+            "number": null,
+            "run": "1",
+            "user": "edx@example.com",
+            "partner": "edx",
+            "fields": {
+                "display_name": "audit course",
+                "mobile_available": true,
+                "start": "2021-01-01",
+                "self_paced": true
+            },
+            "enrollment": {
+                "audit": true,
+                "honor": false,
+                "verified": false,
+                "professional_education": false,
+                "no_id_verification": false,
+                "credit": false,
+                "credit_provider": null
+            }
+        },
+        {
+            "organization": "ecomm-test-courses",
+            "number": null,
+            "run": "1",
+            "user": "edx@example.com",
+            "partner": "edx",
+            "fields": {
+                "display_name": "honor course",
+                "mobile_available": true,
+                "start": "2021-01-01",
+                "self_paced": true
+            },
+            "enrollment": {
+                "audit": false,
+                "honor": true,
+                "verified": false,
+                "professional_education": false,
+                "no_id_verification": false,
+                "credit": false,
+                "credit_provider": null
+            }
+        },
+        {
+            "organization": "ecomm-test-courses",
+            "number": null,
+            "run": "1",
+            "user": "edx@example.com",
+            "partner": "edx",
+            "fields": {
+                "display_name": "verified course with audit seat",
+                "mobile_available": true,
+                "start": "2021-01-01",
+                "self_paced": true
+            },
+            "enrollment": {
+                "audit": true,
+                "honor": false,
+                "verified": true,
+                "professional_education": false,
+                "no_id_verification": false,
+                "credit": false,
+                "credit_provider": null
+            }
+        },
+        {
+            "organization": "ecomm-test-courses",
+            "number": null,
+            "run": "1",
+            "user": "edx@example.com",
+            "partner": "edx",
+            "fields": {
+                "display_name": "verified course with honor seat",
+                "mobile_available": true,
+                "start": "2021-01-01",
+                "self_paced": true
+            },
+            "enrollment": {
+                "audit": false,
+                "honor": true,
+                "verified": true,
+                "professional_education": false,
+                "no_id_verification": false,
+                "credit": false,
+                "credit_provider": null
+            }
+        },
+        {
+            "organization": "ecomm-test-courses",
+            "number": null,
+            "run": "1",
+            "user": "edx@example.com",
+            "partner": "edx",
+            "fields": {
+                "display_name": "professional course id required",
+                "mobile_available": true,
+                "start": "2021-01-01",
+                "self_paced": true
+            },
+            "enrollment": {
+                "audit": false,
+                "honor": false,
+                "verified": false,
+                "professional_education": true,
+                "no_id_verification": false,
+                "credit": false,
+                "credit_provider": null
+            }
+        },
+        {
+            "organization": "ecomm-test-courses",
+            "number": null,
+            "run": "1",
+            "user": "edx@example.com",
+            "partner": "edx",
+            "fields": {
+                "display_name": "professional course id not required",
+                "mobile_available": true,
+                "start": "2021-01-01",
+                "self_paced": true
+            },
+            "enrollment": {
+                "audit": false,
+                "honor": false,
+                "verified": false,
+                "professional_education": true,
+                "no_id_verification": true,
+                "credit": false,
+                "credit_provider": null
+            }
+        },
+        {
+            "organization": "ecomm-test-courses",
+            "number": null,
+            "run": "1",
+            "user": "edx@example.com",
+            "partner": "edx",
+            "fields": {
+                "display_name": "credit course with audit seat",
+                "mobile_available": true,
+                "start": "2021-01-01",
+                "self_paced": true
+            },
+            "enrollment": {
+                "audit": true,
+                "honor": false,
+                "verified": true,
+                "professional_education": false,
+                "no_id_verification": false,
+                "credit": true,
+                "credit_provider": "test-credit-provider"
+            }
+        },
+        {
+            "organization": "ecomm-test-courses",
+            "number": null,
+            "run": "1",
+            "user": "edx@example.com",
+            "partner": "edx",
+            "fields": {
+                "display_name": "credit course with honor seat",
+                "mobile_available": true,
+                "start": "2021-01-01",
+                "self_paced": true
+            },
+            "enrollment": {
+                "audit": false,
+                "honor": true,
+                "verified": true,
+                "professional_education": false,
+                "no_id_verification": false,
+                "credit": true,
+                "credit_provider": "test-credit-provider"
+            }
+        }
+    ]
+}
