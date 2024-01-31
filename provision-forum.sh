@@ -2,5 +2,7 @@
 set -eu -o pipefail
 set -x
 
-docker compose up -d forum
-docker compose exec -T forum bash -e -c 'source /edx/app/forum/ruby_env && source /edx/app/forum/devstack_forum_env && cd /edx/app/forum/cs_comments_service && bundle install --deployment --path /edx/app/forum/.gem/ && bin/rake search:initialize'
+name=forum
+
+docker compose up -d ${name}
+docker compose exec -T ${name} bash -e -c 'cd /edx/app/forum/cs_comments_service && make initialize_search' -- "$name"
