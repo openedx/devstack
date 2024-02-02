@@ -19,6 +19,6 @@ services:
     command: bash -c 'npm ci || exit 1; while true; do npm start; sleep 2; done'
     stdin_open: true
     tty: true
-    image: node:16
+    image: node:18
     environment:
       - NODE_ENV=development
