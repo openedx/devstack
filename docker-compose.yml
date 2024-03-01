@@ -470,7 +470,7 @@ services:
       LMS_HOST: http://localhost:18000
       DJANGO_SETTINGS_MODULE: analytics_dashboard.settings.devstack
       ANALYTICS_DASHBOARD_CFG: /edx/etc/insights.yml
-    image: edxops/insights-dev:${OPENEDX_RELEASE:-latest}
+    image: edxops/insights:${OPENEDX_RELEASE:-latest}
     working_dir: /edx/app/insights/insights
     networks:
       default:
