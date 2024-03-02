@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: kafka-control-center
+  name: kafka-control-center
+  namespace: default
+spec:
+  ports:
+    - name: "9021"
+      port: 9021
+      targetPort: 9021
+  selector:
+    io.kompose.service: kafka-control-center
+status:
+  loadBalancer: {}

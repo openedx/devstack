@@ -1,0 +1,80 @@
+version: v2beta1
+name: kafka
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  kafka:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - env:
+              - name: CONFLUENT_METRICS_ENABLE
+                value: "true"
+              - name: CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS
+                value: edx.devstack.kafka:29092
+              - name: CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS
+                value: "1"
+              - name: CONFLUENT_SUPPORT_CUSTOMER_ID
+                value: anonymous
+              - name: KAFKA_ADVERTISED_LISTENERS
+                value: PLAINTEXT://edx.devstack.kafka:29092,PLAINTEXT_HOST://localhost:9092
+              - name: KAFKA_BROKER_ID
+                value: "1"
+              - name: KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR
+                value: "1"
+              - name: KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR
+                value: "1"
+              - name: KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL
+                value: http://edx.devstack.schema-registry:8081
+              - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+                value: "0"
+              - name: KAFKA_JMX_HOSTNAME
+                value: localhost
+              - name: KAFKA_JMX_PORT
+                value: "9101"
+              - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+                value: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+              - name: KAFKA_METRIC_REPORTERS
+                value: io.confluent.metrics.reporter.ConfluentMetricsReporter
+              - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+                value: "1"
+              - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+                value: "1"
+              - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+                value: "1"
+              - name: KAFKA_ZOOKEEPER_CONNECT
+                value: edx.devstack.zookeeper:2181
+            image: confluentinc/cp-server:6.2.1
+            name: edx-devstack-kafka
+        service:
+          ports:
+            - containerPort: 9092
+              port: 9092
+              protocol: TCP
+            - containerPort: 9101
+              port: 9101
+              protocol: TCP
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  kafka:
+    labelSelector:
+      app.kubernetes.io/component: kafka
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "9092"
+      - port: "9101"
+dependencies:
+  zookeeper:
+    path: devspace-zookeeper.yaml
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

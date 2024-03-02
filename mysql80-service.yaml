@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mysql80
+  name: mysql80
+  namespace: default
+spec:
+  ports:
+    - name: "3406"
+      port: 3406
+      targetPort: 3306
+  selector:
+    io.kompose.service: mysql80
+status:
+  loadBalancer: {}

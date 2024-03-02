@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: analyticsapi
+  name: analyticsapi
+  namespace: default
+spec:
+  ports:
+    - name: "19001"
+      port: 19001
+      targetPort: 19001
+  selector:
+    io.kompose.service: analyticsapi
+status:
+  loadBalancer: {}

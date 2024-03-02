@@ -1,0 +1,90 @@
+version: v2beta1
+name: cms
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  cms:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - source /edx/app/edxapp/edxapp_env && while true; do python /edx/app/edxapp/edx-platform/manage.py cms runserver 0.0.0.0:18010 --settings devstack_docker; sleep 2; done
+            command:
+              - ""
+            env:
+              - name: CMS_CFG
+                value: /edx/etc/studio.yml
+              - name: DJANGO_WATCHMAN_TIMEOUT
+                value: "30"
+              - name: EDXAPP_TEST_MONGO_HOST
+                value: edx.devstack.mongo
+              - name: FRONTEND_TEST_SERVER_CMS_PORT
+                value: "18131"
+              - name: FRONTEND_TEST_SERVER_HOSTNAME
+                value: edx.devstack.cms
+              - name: FRONTEND_TEST_SERVER_LMS_PORT
+                value: "18103"
+              - name: LMS_CFG
+                value: /edx/etc/lms.yml
+              - name: NO_PYTHON_UNINSTALL
+                value: "1"
+              - name: PATH
+                value: '/edx/app/edxapp/venvs/edxapp/bin:/edx/app/edxapp/nodeenv/bin:/edx/app/edxapp/edx-platform/node_modules/.bin:/edx/app/edxapp/edx-platform/bin:'
+              - name: SERVICE_VARIANT
+                value: cms
+              - name: VIRTUAL_ENV
+                value: /edx/app/edxapp/venvs/edxapp
+            image: openedx/lms-dev:latest
+            name: edx-devstack-cms
+            volumeMounts:
+              - containerPath: /edx/var/edxapp/staticfiles
+                volume:
+                  name: edxapp_cms_assets
+                  shared: true
+        service:
+          ports:
+            - containerPort: 18010
+              port: 18010
+              protocol: TCP
+            - containerPort: 19877
+              port: 19877
+              protocol: TCP
+        volumes:
+          - name: edxapp_cms_assets
+            size: 5Gi
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  cms:
+    labelSelector:
+      app.kubernetes.io/component: cms
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "18010"
+      - port: "19877"
+dependencies:
+  elasticsearch710:
+    path: devspace-elasticsearch710.yaml
+  lms:
+    path: devspace-lms.yaml
+  memcached:
+    path: devspace-memcached.yaml
+  mongo:
+    path: devspace-mongo.yaml
+  mysql57:
+    path: devspace-mysql57.yaml
+  mysql80:
+    path: devspace-mysql80.yaml
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

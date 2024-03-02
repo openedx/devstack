@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: xqueue-consumer
+  name: xqueue-consumer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: xqueue-consumer
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: xqueue-consumer
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - source /edx/app/xqueue/xqueue_env && while true; do python /edx/app/xqueue/xqueue/manage.py run_consumer ; sleep 2; done
+          image: edxops/xqueue-dev:latest
+          name: edx.devstack.xqueue-consumer
+          resources: {}
+          volumeMounts:
+            - mountPath: /edx/app/xqueue/xqueue
+              name: xqueue-consumer-claim0
+            - mountPath: /edx/etc/xqueue.yml
+              name: xqueue-consumer-claim1
+          workingDir: /edx/app/xqueue/xqueue
+      restartPolicy: Always
+      volumes:
+        - name: xqueue-consumer-claim0
+          persistentVolumeClaim:
+            claimName: xqueue-consumer-claim0
+        - name: xqueue-consumer-claim1
+          persistentVolumeClaim:
+            claimName: xqueue-consumer-claim1
+status: {}

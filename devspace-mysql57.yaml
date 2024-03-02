@@ -1,0 +1,55 @@
+version: v2beta1
+name: mysql57
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  mysql57:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - mysqld
+              - --character-set-server=utf8
+              - --collation-server=utf8_general_ci
+            command:
+              - ""
+            env:
+              - name: MYSQL_ALLOW_EMPTY_PASSWORD
+                value: "yes"
+              - name: MYSQL_ROOT_PASSWORD
+                value: ""
+            image: edxops/mysql:5.7
+            name: edx-devstack-mysql57
+            volumeMounts:
+              - containerPath: /var/lib/mysql
+                volume:
+                  name: mysql57_data
+                  shared: true
+        service:
+          ports:
+            - containerPort: 3306
+              port: 3506
+              protocol: TCP
+        volumes:
+          - name: mysql57_data
+            size: 5Gi
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  mysql57:
+    labelSelector:
+      app.kubernetes.io/component: mysql57
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: 3506:3306
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

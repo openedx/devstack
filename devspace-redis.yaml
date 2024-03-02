@@ -1,0 +1,36 @@
+version: v2beta1
+name: redis
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  redis:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - redis-server
+              - --requirepass
+              - password
+            command:
+              - ""
+            image: redis:7.2
+            name: edx-devstack-redis
+            volumeMounts:
+              - containerPath: /data
+                volume:
+                  name: redis_data
+                  shared: true
+        volumes:
+          - name: redis_data
+            size: 5Gi
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

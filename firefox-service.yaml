@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: firefox
+  name: firefox
+  namespace: default
+spec:
+  ports:
+    - name: "25900"
+      port: 25900
+      targetPort: 5900
+  selector:
+    io.kompose.service: firefox
+status:
+  loadBalancer: {}

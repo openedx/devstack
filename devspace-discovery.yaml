@@ -1,0 +1,84 @@
+version: v2beta1
+name: discovery
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  discovery:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - source /edx/app/discovery/discovery_env && while true; do python /edx/app/discovery/discovery/manage.py runserver 0.0.0.0:18381; sleep 2; done
+            command:
+              - ""
+            env:
+              - name: DB_MIGRATION_HOST
+                value: edx.devstack.mysql80
+              - name: DJANGO_WATCHMAN_TIMEOUT
+                value: "30"
+              - name: ENABLE_DJANGO_TOOLBAR
+                value: "1"
+              - name: TEST_ELASTICSEARCH_URL
+                value: edx.devstack.elasticsearch710
+            image: edxops/discovery-dev:latest
+            name: edx-devstack-discovery
+            volumeMounts:
+              - containerPath: /edx/var/discovery
+                volume:
+                  name: discovery_assets
+                  shared: true
+              - containerPath: /edx/etc/discovery.yml
+                volume:
+                  name: volume-1
+                  readOnly: false
+        service:
+          ports:
+            - containerPort: 18381
+              port: 18381
+              protocol: TCP
+        volumes:
+          - name: discovery_assets
+            size: 5Gi
+          - emptyDir: {}
+            name: volume-1
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  discovery:
+    labelSelector:
+      app.kubernetes.io/component: discovery
+    command:
+      - ""
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: /configuration_files/discovery.yml:/edx/etc/discovery.yml
+        startContainer: true
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "18381"
+dependencies:
+  elasticsearch710:
+    path: devspace-elasticsearch710.yaml
+  memcached:
+    path: devspace-memcached.yaml
+  mysql57:
+    path: devspace-mysql57.yaml
+  mysql80:
+    path: devspace-mysql80.yaml
+  opensearch12:
+    path: devspace-opensearch12.yaml
+  redis:
+    path: devspace-redis.yaml
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

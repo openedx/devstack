@@ -1,0 +1,41 @@
+version: v2beta1
+name: zookeeper
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  zookeeper:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - env:
+              - name: ZOOKEEPER_CLIENT_PORT
+                value: "2181"
+              - name: ZOOKEEPER_TICK_TIME
+                value: "2000"
+            image: confluentinc/cp-zookeeper:6.2.1
+            name: edx-devstack-zookeeper
+        service:
+          ports:
+            - containerPort: 2181
+              port: 2181
+              protocol: TCP
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  zookeeper:
+    labelSelector:
+      app.kubernetes.io/component: zookeeper
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "2181"
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

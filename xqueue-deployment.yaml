@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: xqueue
+  name: xqueue
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: xqueue
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: xqueue
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - source /edx/app/xqueue/xqueue_env && while true; do python /edx/app/xqueue/xqueue/manage.py runserver 0.0.0.0:18040 ; sleep 2; done
+          env:
+            - name: XQUEUE_CFG
+              value: /edx/etc/xqueue.yml
+          image: edxops/xqueue-dev:latest
+          name: edx.devstack.xqueue
+          ports:
+            - containerPort: 18040
+              hostPort: 18040
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /edx/app/xqueue/xqueue
+              name: xqueue-claim0
+            - mountPath: /edx/etc/xqueue.yml
+              name: xqueue-claim1
+          workingDir: /edx/app/xqueue/xqueue
+      restartPolicy: Always
+      volumes:
+        - name: xqueue-claim0
+          persistentVolumeClaim:
+            claimName: xqueue-claim0
+        - name: xqueue-claim1
+          persistentVolumeClaim:
+            claimName: xqueue-claim1
+status: {}

@@ -1,0 +1,716 @@
+version: v2beta1
+name: docker-compose
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  chrome:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - command:
+              - ./manage.py
+              - runserver
+            image: edxops/chrome:latest
+            name: edx-devstack-chrome
+            volumeMounts:
+              - containerPath: /edx/app/edxapp/edx-platform/common/test/data
+                volume:
+                  name: volume-1
+                  readOnly: false
+        service:
+          ports:
+            - containerPort: 5900
+              port: 15900
+              protocol: TCP
+        volumes:
+          - emptyDir: {}
+            name: volume-1
+  coursegraph:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - command:
+              - ""
+            env:
+              - name: NEO4J_AUTH
+                value: neo4j/edx
+            image: neo4j:3.5.28
+            name: edx-devstack-coursegraph
+            volumeMounts:
+              - containerPath: /data
+                volume:
+                  name: coursegraph_data
+                  shared: true
+        service:
+          ports:
+            - containerPort: 7474
+              port: 7474
+              protocol: TCP
+            - containerPort: 7687
+              port: 7687
+              protocol: TCP
+        volumes:
+          - name: coursegraph_data
+            size: 5Gi
+  credentials:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - source /edx/app/credentials/credentials_env && while true; do python /edx/app/credentials/credentials/manage.py runserver 0.0.0.0:18150; sleep 2; done
+            env:
+              - name: CACHE_LOCATION
+                value: edx.devstack.memcached:11211
+              - name: DB_HOST
+                value: edx.devstack.mysql80
+              - name: DJANGO_WATCHMAN_TIMEOUT
+                value: "30"
+              - name: ENABLE_DJANGO_TOOLBAR
+                value: "1"
+              - name: SOCIAL_AUTH_EDX_OIDC_URL_ROOT
+                value: http://edx.devstack.lms:18000/oauth2
+            image: edxops/credentials:latest
+            name: edx-devstack-credentials
+        service:
+          ports:
+            - containerPort: 18150
+              port: 18150
+              protocol: TCP
+  edx-notes-api:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - while true; do python /edx/app/notes/manage.py runserver 0.0.0.0:18120 --settings notesserver.settings.devstack; sleep 4; done
+            env:
+              - name: DB_ENGINE
+                value: django.db.backends.mysql
+              - name: DB_HOST
+                value: edx.devstack.mysql80
+              - name: DB_NAME
+                value: notes
+              - name: DB_PASSWORD
+                value: password
+              - name: DB_PORT
+                value: "3306"
+              - name: DB_USER
+                value: notes001
+              - name: DJANGO_WATCHMAN_TIMEOUT
+                value: "30"
+              - name: ELASTICSEARCH_DSL
+                value: http://edx.devstack.elasticsearch710:9200
+              - name: ELASTICSEARCH_URL
+                value: http://edx.devstack.elasticsearch710:9200
+              - name: ENABLE_DJANGO_TOOLBAR
+                value: "1"
+            image: openedx/edx-notes-api-dev:latest
+            name: edx-devstack-edxnotesapi
+        service:
+          ports:
+            - containerPort: 18120
+              port: 18120
+              protocol: TCP
+  firefox:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - command:
+              - ""
+            image: edxops/firefox:latest
+            name: edx-devstack-firefox
+            volumeMounts:
+              - containerPath: /edx/app/edxapp/edx-platform/common/test/data
+                volume:
+                  name: volume-1
+                  readOnly: false
+        service:
+          ports:
+            - containerPort: 5900
+              port: 25900
+              protocol: TCP
+        volumes:
+          - emptyDir: {}
+            name: volume-1
+  frontend-app-account:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-account
+        service:
+          ports:
+            - containerPort: 1997
+              port: 1997
+              protocol: TCP
+  frontend-app-authn:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-authn
+        service:
+          ports:
+            - containerPort: 1999
+              port: 1999
+              protocol: TCP
+  frontend-app-course-authoring:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-course-authoring
+        service:
+          ports:
+            - containerPort: 2001
+              port: 2001
+              protocol: TCP
+  frontend-app-gradebook:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-gradebook
+        service:
+          ports:
+            - containerPort: 1994
+              port: 1994
+              protocol: TCP
+  frontend-app-learning:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-learning
+        service:
+          ports:
+            - containerPort: 2000
+              port: 2000
+              protocol: TCP
+  frontend-app-library-authoring:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-library-authoring
+        service:
+          ports:
+            - containerPort: 3001
+              port: 3001
+              protocol: TCP
+  frontend-app-ora-grading:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-ora-grading
+        service:
+          ports:
+            - containerPort: 1993
+              port: 1993
+              protocol: TCP
+  frontend-app-payment:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-payment
+        service:
+          ports:
+            - containerPort: 1998
+              port: 1998
+              protocol: TCP
+  frontend-app-profile:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-profile
+        service:
+          ports:
+            - containerPort: 1995
+              port: 1995
+              protocol: TCP
+  frontend-app-program-console:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-program-console
+        service:
+          ports:
+            - containerPort: 1976
+              port: 1976
+              protocol: TCP
+  frontend-app-publisher:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - npm ci || exit 1; while true; do npm start; sleep 2; done
+            env:
+              - name: NODE_ENV
+                value: development
+            image: node:16
+            name: edx-devstack-frontend-app-publisher
+        service:
+          ports:
+            - containerPort: 18400
+              port: 18400
+              protocol: TCP
+  insights:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - source /edx/app/insights/insights_env && while true; do python /edx/app/insights/insights/manage.py runserver 0.0.0.0:18110 --settings analytics_dashboard.settings.devstack; sleep 2; done
+            command:
+              - ""
+            env:
+              - name: ANALYTICS_DASHBOARD_CFG
+                value: /edx/etc/insights.yml
+              - name: DB_HOST
+                value: edx.devstack.mysql80
+              - name: DB_NAME
+                value: dashboard
+              - name: DB_PASSWORD
+                value: password
+              - name: DB_PORT
+                value: "3306"
+              - name: DB_USER
+                value: analytics001
+              - name: DJANGO_SETTINGS_MODULE
+                value: analytics_dashboard.settings.devstack
+              - name: LMS_HOST
+                value: http://localhost:18000
+            image: edxops/insights-dev:latest
+            name: edx-devstack-insights
+            volumeMounts:
+              - containerPath: /edx/var/insights
+                volume:
+                  name: insights-1
+                  shared: true
+              - containerPath: /edx/etc/insights.yml
+                volume:
+                  name: volume-1
+                  readOnly: false
+        service:
+          ports:
+            - containerPort: 18110
+              port: 18110
+              protocol: TCP
+        volumes:
+          - name: insights-1
+            size: 5Gi
+          - emptyDir: {}
+            name: volume-1
+  kafka-control-center:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - env:
+              - name: CONFLUENT_METRICS_TOPIC_REPLICATION
+                value: "1"
+              - name: CONTROL_CENTER_BOOTSTRAP_SERVERS
+                value: edx.devstack.kafka:29092
+              - name: CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS
+                value: "1"
+              - name: CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS
+                value: "1"
+              - name: CONTROL_CENTER_REPLICATION_FACTOR
+                value: "1"
+              - name: CONTROL_CENTER_SCHEMA_REGISTRY_URL
+                value: http://edx.devstack.schema-registry:8081
+              - name: PORT
+                value: "9021"
+            image: confluentinc/cp-enterprise-control-center:6.2.1
+            name: edx-devstack-kafka-control-center
+        service:
+          ports:
+            - containerPort: 9021
+              port: 9021
+              protocol: TCP
+  xqueue:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - source /edx/app/xqueue/xqueue_env && while true; do python /edx/app/xqueue/xqueue/manage.py runserver 0.0.0.0:18040 ; sleep 2; done
+            command:
+              - ""
+            env:
+              - name: XQUEUE_CFG
+                value: /edx/etc/xqueue.yml
+            image: edxops/xqueue-dev:latest
+            name: edx-devstack-xqueue
+            volumeMounts:
+              - containerPath: /edx/app/xqueue/xqueue
+                volume:
+                  name: volume-1
+                  readOnly: false
+              - containerPath: /edx/etc/xqueue.yml
+                volume:
+                  name: volume-2
+                  readOnly: false
+        service:
+          ports:
+            - containerPort: 18040
+              port: 18040
+              protocol: TCP
+        volumes:
+          - emptyDir: {}
+            name: volume-1
+          - emptyDir: {}
+            name: volume-2
+  xqueue-consumer:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - source /edx/app/xqueue/xqueue_env && while true; do python /edx/app/xqueue/xqueue/manage.py run_consumer ; sleep 2; done
+            command:
+              - ""
+            image: edxops/xqueue-dev:latest
+            name: edx-devstack-xqueue-consumer
+            volumeMounts:
+              - containerPath: /edx/app/xqueue/xqueue
+                volume:
+                  name: volume-1
+                  readOnly: false
+              - containerPath: /edx/etc/xqueue.yml
+                volume:
+                  name: volume-2
+                  readOnly: false
+        volumes:
+          - emptyDir: {}
+            name: volume-1
+          - emptyDir: {}
+            name: volume-2
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  chrome:
+    labelSelector:
+      app.kubernetes.io/component: chrome
+    command:
+      - ./manage.py
+      - runserver
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: ../edx-platform/common/test/data:/edx/app/edxapp/edx-platform/common/test/data
+        startContainer: true
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: 15900:5900
+  coursegraph:
+    labelSelector:
+      app.kubernetes.io/component: coursegraph
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "7474"
+      - port: "7687"
+  credentials:
+    labelSelector:
+      app.kubernetes.io/component: credentials
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "18150"
+  edx-notes-api:
+    labelSelector:
+      app.kubernetes.io/component: edx_notes_api
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "18120"
+  firefox:
+    labelSelector:
+      app.kubernetes.io/component: firefox
+    command:
+      - ""
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: ../edx-platform/common/test/data:/edx/app/edxapp/edx-platform/common/test/data
+        startContainer: true
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: 25900:5900
+  frontend-app-account:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-account
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "1997"
+  frontend-app-authn:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-authn
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "1999"
+  frontend-app-course-authoring:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-course-authoring
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "2001"
+  frontend-app-gradebook:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-gradebook
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "1994"
+  frontend-app-learning:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-learning
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "2000"
+  frontend-app-library-authoring:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-library-authoring
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "3001"
+  frontend-app-ora-grading:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-ora-grading
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "1993"
+  frontend-app-payment:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-payment
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "1998"
+  frontend-app-profile:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-profile
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "1995"
+  frontend-app-program-console:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-program-console
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "1976"
+  frontend-app-publisher:
+    labelSelector:
+      app.kubernetes.io/component: frontend-app-publisher
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "18400"
+  insights:
+    labelSelector:
+      app.kubernetes.io/component: insights
+    command:
+      - ""
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: /configuration_files/insights.yml:/edx/etc/insights.yml
+        startContainer: true
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "18110"
+  kafka-control-center:
+    labelSelector:
+      app.kubernetes.io/component: kafka-control-center
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "9021"
+  xqueue:
+    labelSelector:
+      app.kubernetes.io/component: xqueue
+    command:
+      - ""
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: /xqueue:/edx/app/xqueue/xqueue
+        startContainer: true
+      - path: /configuration_files/xqueue.yml:/edx/etc/xqueue.yml
+        startContainer: true
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "18040"
+  xqueue-consumer:
+    labelSelector:
+      app.kubernetes.io/component: xqueue_consumer
+    command:
+      - ""
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: /xqueue:/edx/app/xqueue/xqueue
+        startContainer: true
+      - path: /configuration_files/xqueue.yml:/edx/etc/xqueue.yml
+        startContainer: true
+dependencies:
+  analyticsapi:
+    path: devspace-analyticsapi.yaml
+  cms:
+    path: devspace-cms.yaml
+  ecommerce:
+    path: devspace-ecommerce.yaml
+  elasticsearch710:
+    path: devspace-elasticsearch710.yaml
+  kafka:
+    path: devspace-kafka.yaml
+  lms:
+    path: devspace-lms.yaml
+  memcached:
+    path: devspace-memcached.yaml
+  mysql57:
+    path: devspace-mysql57.yaml
+  mysql80:
+    path: devspace-mysql80.yaml
+  registrar:
+    path: devspace-registrar.yaml
+  schema-registry:
+    path: devspace-schema-registry.yaml
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

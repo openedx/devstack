@@ -1,0 +1,80 @@
+version: v2beta1
+name: analyticsapi
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  analyticsapi:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - source /edx/app/analytics_api/analytics_api_env && while true;  do python /edx/app/analytics_api/analytics_api/manage.py runserver 0.0.0.0:19001 --settings analyticsdataserver.settings.devstack; sleep 2; done
+            command:
+              - ""
+            env:
+              - name: DB_HOST
+                value: edx.devstack.mysql80
+              - name: DB_PASSWORD
+                value: password
+              - name: DB_PORT
+                value: "3306"
+              - name: DB_USER
+                value: analytics001
+              - name: ELASTICSEARCH_LEARNERS_HOST
+                value: edx.devstack.elasticsearch710
+            image: edxops/analytics-api-dev:latest
+            name: edx-devstack-analyticsapi
+            volumeMounts:
+              - containerPath: /edx/var/analyticsapi
+                volume:
+                  name: analyticsapi-1
+                  shared: true
+              - containerPath: /edx/etc/analytics_api.yml
+                volume:
+                  name: volume-1
+                  readOnly: false
+        service:
+          ports:
+            - containerPort: 19001
+              port: 19001
+              protocol: TCP
+        volumes:
+          - name: analyticsapi-1
+            size: 5Gi
+          - emptyDir: {}
+            name: volume-1
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  analyticsapi:
+    labelSelector:
+      app.kubernetes.io/component: analyticsapi
+    command:
+      - ""
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: /configuration_files/analytics_api.yml:/edx/etc/analytics_api.yml
+        startContainer: true
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "19001"
+dependencies:
+  elasticsearch710:
+    path: devspace-elasticsearch710.yaml
+  mysql57:
+    path: devspace-mysql57.yaml
+  mysql80:
+    path: devspace-mysql80.yaml
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

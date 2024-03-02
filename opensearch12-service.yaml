@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: opensearch12
+  name: opensearch12
+  namespace: default
+spec:
+  ports:
+    - name: "9202"
+      port: 9202
+      targetPort: 9200
+    - name: "9600"
+      port: 9600
+      targetPort: 9600
+  selector:
+    io.kompose.service: opensearch12
+status:
+  loadBalancer: {}

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: coursegraph
+  name: coursegraph
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: coursegraph
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: coursegraph
+    spec:
+      containers:
+        - env:
+            - name: NEO4J_AUTH
+              value: neo4j/edx
+          image: neo4j:3.5.28
+          name: edx.devstack.coursegraph
+          ports:
+            - containerPort: 7474
+              hostPort: 7474
+              protocol: TCP
+            - containerPort: 7687
+              hostPort: 7687
+              protocol: TCP
+          resources: {}
+          stdin: true
+          tty: true
+          volumeMounts:
+            - mountPath: /data
+              name: coursegraph-data
+      hostname: coursegraph.devstack.edx
+      restartPolicy: Always
+      volumes:
+        - name: coursegraph-data
+          persistentVolumeClaim:
+            claimName: coursegraph-data
+status: {}

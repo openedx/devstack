@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: lms
+  name: lms
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: lms
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: lms
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - source /edx/app/edxapp/edxapp_env && while true; do python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:18000 --settings devstack_docker; sleep 2; done
+          env:
+            - name: BOK_CHOY_CMS_PORT
+              value: "18031"
+            - name: BOK_CHOY_HOSTNAME
+              value: edx.devstack.lms
+            - name: BOK_CHOY_LMS_PORT
+              value: "18003"
+            - name: CMS_CFG
+              value: /edx/etc/studio.yml
+            - name: DJANGO_WATCHMAN_TIMEOUT
+              value: "30"
+            - name: EDXAPP_TEST_MONGO_HOST
+              value: edx.devstack.mongo
+            - name: LMS_CFG
+              value: /edx/etc/lms.yml
+            - name: NO_PYTHON_UNINSTALL
+              value: "1"
+            - name: PATH
+              value: /edx/app/edxapp/venvs/edxapp/bin:/edx/app/edxapp/nodeenv/bin:/edx/app/edxapp/edx-platform/node_modules/.bin:/edx/app/edxapp/edx-platform/bin:/Users/dianahuang/bin:/Users/dianahuang/bin:/Users/dianahuang/.orbstack/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin
+            - name: SERVICE_VARIANT
+              value: lms
+            - name: VIRTUAL_ENV
+              value: /edx/app/edxapp/venvs/edxapp
+          image: openedx/lms-dev:latest
+          name: edx.devstack.lms
+          ports:
+            - containerPort: 18000
+              hostPort: 18000
+              protocol: TCP
+            - containerPort: 19876
+              hostPort: 19876
+              protocol: TCP
+          resources: {}
+          stdin: true
+          tty: true
+          volumeMounts:
+            - mountPath: /edx/var/edxapp/staticfiles
+              name: edxapp-lms-assets
+      hostname: lms.devstack.edx
+      restartPolicy: Always
+      volumes:
+        - name: edxapp-lms-assets
+          persistentVolumeClaim:
+            claimName: edxapp-lms-assets
+status: {}

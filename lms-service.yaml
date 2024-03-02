@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: lms
+  name: lms
+  namespace: default
+spec:
+  ports:
+    - name: "18000"
+      port: 18000
+      targetPort: 18000
+    - name: "19876"
+      port: 19876
+      targetPort: 19876
+  selector:
+    io.kompose.service: lms
+status:
+  loadBalancer: {}

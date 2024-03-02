@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: kafka-control-center
+  name: kafka-control-center
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: kafka-control-center
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: kafka-control-center
+    spec:
+      containers:
+        - env:
+            - name: CONFLUENT_METRICS_TOPIC_REPLICATION
+              value: "1"
+            - name: CONTROL_CENTER_BOOTSTRAP_SERVERS
+              value: edx.devstack.kafka:29092
+            - name: CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS
+              value: "1"
+            - name: CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS
+              value: "1"
+            - name: CONTROL_CENTER_REPLICATION_FACTOR
+              value: "1"
+            - name: CONTROL_CENTER_SCHEMA_REGISTRY_URL
+              value: http://edx.devstack.schema-registry:8081
+            - name: PORT
+              value: "9021"
+          image: confluentinc/cp-enterprise-control-center:6.2.1
+          name: edx.devstack.kafka-control-center
+          ports:
+            - containerPort: 9021
+              hostPort: 9021
+              protocol: TCP
+          resources: {}
+      hostname: kafka-control-center.devstack.edx
+      restartPolicy: Always
+status: {}

@@ -1,0 +1,108 @@
+version: v2beta1
+name: registrar
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  registrar:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - args:
+              - bash
+              - -c
+              - while true; do python /edx/app/registrar/manage.py runserver 0.0.0.0:18734; sleep 2; done
+            command:
+              - ""
+            env:
+              - name: ANALYTICS_DASHBOARD_CFG
+                value: /edx/etc/registrar.yml
+              - name: CELERY_ALWAYS_EAGER
+                value: "false"
+              - name: CELERY_BROKER_HOSTNAME
+                value: edx.devstack.redis:6379
+              - name: CELERY_BROKER_PASSWORD
+                value: password
+              - name: CELERY_BROKER_TRANSPORT
+                value: redis
+              - name: CELERY_BROKER_VHOST
+                value: "10"
+              - name: DB_HOST
+                value: edx.devstack.mysql80
+              - name: DB_NAME
+                value: registrar
+              - name: DB_PASSWORD
+                value: password
+              - name: DB_PORT
+                value: "3306"
+              - name: DB_USER
+                value: registrar001
+              - name: DJANGO_SETTINGS_MODULE
+                value: registrar.settings.devstack
+              - name: DJANGO_WATCHMAN_TIMEOUT
+                value: "30"
+              - name: LMS_HOST
+                value: http://localhost:18000
+              - name: MEMCACHE_HOST
+                value: edx.devstack.memcached
+            image: edxops/registrar-dev:latest
+            name: edx-devstack-registrar
+            volumeMounts:
+              - containerPath: /edx/var/registrar
+                volume:
+                  name: registrar-1
+                  shared: true
+              - containerPath: /edx/etc/registrar.yml
+                volume:
+                  name: volume-1
+                  readOnly: false
+        service:
+          ports:
+            - containerPort: 18734
+              port: 18734
+              protocol: TCP
+        volumes:
+          - name: registrar-1
+            size: 5Gi
+          - emptyDir: {}
+            name: volume-1
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  registrar:
+    labelSelector:
+      app.kubernetes.io/component: registrar
+    command:
+      - ""
+    # Sync files between the local filesystem and the development container
+    sync:
+      - path: /configuration_files/registrar.yml:/edx/etc/registrar.yml
+        startContainer: true
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: "18734"
+dependencies:
+  discovery:
+    path: devspace-discovery.yaml
+  lms:
+    path: devspace-lms.yaml
+  memcached:
+    path: devspace-memcached.yaml
+  mysql57:
+    path: devspace-mysql57.yaml
+  mysql80:
+    path: devspace-mysql80.yaml
+  redis:
+    path: devspace-redis.yaml
+  registrar-worker:
+    path: devspace-registrar-worker.yaml
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

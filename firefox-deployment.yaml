@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: firefox
+  name: firefox
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: firefox
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: firefox
+    spec:
+      containers:
+        - image: edxops/firefox:latest
+          name: edx.devstack.firefox
+          ports:
+            - containerPort: 5900
+              hostPort: 25900
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /edx/app/edxapp/edx-platform/common/test/data
+              name: firefox-claim0
+      hostname: firefox.devstack.edx
+      restartPolicy: Always
+      volumes:
+        - name: firefox-claim0
+          persistentVolumeClaim:
+            claimName: firefox-claim0
+status: {}

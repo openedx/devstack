@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: elasticsearch7
+  name: elasticsearch7
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: elasticsearch7
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: elasticsearch7
+    spec:
+      containers:
+        - env:
+            - name: ES_JAVA_OPTS
+              value: -Xms512m -Xmx512m
+            - name: bootstrap.memory_lock
+              value: "true"
+            - name: discovery.type
+              value: single-node
+          image: elasticsearch:7.8.1
+          name: edx.devstack.elasticsearch7
+          ports:
+            - containerPort: 9200
+              hostPort: 9200
+              protocol: TCP
+            - containerPort: 9300
+              hostPort: 9300
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /usr/share/elasticsearch/data
+              name: elasticsearch7-data
+      hostname: elasticsearch7.devstack.edx
+      restartPolicy: Always
+      volumes:
+        - name: elasticsearch7-data
+          persistentVolumeClaim:
+            claimName: elasticsearch7-data
+status: {}

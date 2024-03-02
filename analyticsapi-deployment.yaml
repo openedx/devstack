@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: analyticsapi
+  name: analyticsapi
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: analyticsapi
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: analyticsapi
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - source /edx/app/analytics_api/analytics_api_env && while true;  do python /edx/app/analytics_api/analytics_api/manage.py runserver 0.0.0.0:19001 --settings analyticsdataserver.settings.devstack; sleep 2; done
+          env:
+            - name: DB_HOST
+              value: edx.devstack.mysql57
+            - name: DB_PASSWORD
+              value: password
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_USER
+              value: analytics001
+            - name: ELASTICSEARCH_LEARNERS_HOST
+              value: edx.devstack.elasticsearch710
+          image: edxops/analytics-api-dev:latest
+          name: edx.devstack.analyticsapi
+          ports:
+            - containerPort: 19001
+              hostPort: 19001
+              protocol: TCP
+          resources: {}
+          stdin: true
+          tty: true
+          volumeMounts:
+            - mountPath: /edx/var/analyticsapi
+              name: analyticsapi-claim0
+            - mountPath: /edx/etc/analytics_api.yml
+              name: analyticsapi-claim1
+          workingDir: /edx/app/analytics_api/analytics_api
+      hostname: analyticsapi
+      restartPolicy: Always
+      volumes:
+        - name: analyticsapi-claim0
+          persistentVolumeClaim:
+            claimName: analyticsapi-claim0
+        - name: analyticsapi-claim1
+          persistentVolumeClaim:
+            claimName: analyticsapi-claim1
+status: {}

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: xqueue
+  name: xqueue
+  namespace: default
+spec:
+  ports:
+    - name: "18040"
+      port: 18040
+      targetPort: 18040
+  selector:
+    io.kompose.service: xqueue
+status:
+  loadBalancer: {}

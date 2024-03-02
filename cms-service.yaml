@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: cms
+  name: cms
+  namespace: default
+spec:
+  ports:
+    - name: "18010"
+      port: 18010
+      targetPort: 18010
+    - name: "19877"
+      port: 19877
+      targetPort: 19877
+  selector:
+    io.kompose.service: cms
+status:
+  loadBalancer: {}

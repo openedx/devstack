@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: opensearch12
+  name: opensearch12
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: opensearch12
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.30.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/devstack-default: "true"
+        io.kompose.service: opensearch12
+    spec:
+      containers:
+        - env:
+            - name: ES_JAVA_OPTS
+              value: -Xms512m -Xmx512m
+            - name: bootstrap.memory_lock
+              value: "true"
+            - name: discovery.type
+              value: single-node
+          image: opensearchproject/opensearch:1.2.0
+          name: edx.devstack.opensearch12
+          ports:
+            - containerPort: 9200
+              hostPort: 9202
+              protocol: TCP
+            - containerPort: 9600
+              hostPort: 9600
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /usr/share/opensearch/data
+              name: opensearch12-data
+      hostname: opensearch12.devstack.edx
+      restartPolicy: Always
+      volumes:
+        - name: opensearch12-data
+          persistentVolumeClaim:
+            claimName: opensearch12-data
+status: {}

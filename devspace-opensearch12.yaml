@@ -1,0 +1,59 @@
+version: v2beta1
+name: opensearch12
+
+# This is a list of `deployments` that DevSpace can create for this project
+deployments:
+  opensearch12:
+    # This deployment uses `helm` but you can also define `kubectl` deployments or kustomizations
+    helm:
+      # Under `values` we can define the values for this Helm chart used during `helm install/upgrade`
+      # You may also use `valuesFiles` to load values from files, e.g. valuesFiles: ["values.yaml"]
+      values:
+        containers:
+          - command:
+              - ""
+            env:
+              - name: ES_JAVA_OPTS
+                value: -Xms512m -Xmx512m
+              - name: bootstrap.memory_lock
+                value: "true"
+              - name: discovery.type
+                value: single-node
+              - name: plugins.security.disabled
+                value: "true"
+            image: opensearchproject/opensearch:1.2.0
+            name: edx-devstack-opensearch12
+            volumeMounts:
+              - containerPath: /usr/share/opensearch/data
+                volume:
+                  name: opensearch12_data
+                  shared: true
+        service:
+          ports:
+            - containerPort: 9200
+              port: 9202
+              protocol: TCP
+            - containerPort: 9600
+              port: 9600
+              protocol: TCP
+        volumes:
+          - name: opensearch12_data
+            size: 5Gi
+
+# This is a list of `dev` containers that are based on the containers created by your deployments
+dev:
+  opensearch12:
+    labelSelector:
+      app.kubernetes.io/component: opensearch12
+    # Forward the following ports to be able access your application via localhost
+    ports:
+      - port: 9202:9200
+      - port: "9600"
+
+# Define dependencies to other projects with a devspace.yaml
+# dependencies:
+#   api:
+#     git: https://...  # Git-based dependencies
+#     tag: v1.0.0
+#   ui:
+#     path: ./ui        # Path-based dependencies (for monorepos)

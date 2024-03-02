@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: elasticsearch710
+  name: elasticsearch710
+  namespace: default
+spec:
+  ports:
+    - name: "9201"
+      port: 9201
+      targetPort: 9200
+    - name: "9301"
+      port: 9301
+      targetPort: 9300
+  selector:
+    io.kompose.service: elasticsearch710
+status:
+  loadBalancer: {}

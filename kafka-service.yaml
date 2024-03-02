@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.30.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: kafka
+  name: kafka
+  namespace: default
+spec:
+  ports:
+    - name: "9092"
+      port: 9092
+      targetPort: 9092
+    - name: "9101"
+      port: 9101
+      targetPort: 9101
+  selector:
+    io.kompose.service: kafka
+status:
+  loadBalancer: {}
