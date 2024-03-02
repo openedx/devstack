@@ -68,6 +68,21 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 
+  elasticsearch710_kibana:
+    container_name: edx.devstack.elasticsearch710_kibana
+    hostname: elasticsearch710_kibana.devstack.edx
+    image: docker.elastic.co/kibana/kibana:7.10.1
+    networks:
+      default:
+        aliases:
+          - edx.devstack.elasticsearch710_kibana
+    depends_on:
+      - elasticsearch710
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://edx.devstack.elasticsearch710:9200
+
   # This is meant to be used to test OS upgrades.
   opensearch12:
     container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.opensearch12"
@@ -87,6 +102,23 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - "plugins.security.disabled=true"
+      - reindex.remote.whitelist=edx.devstack.elasticsearch710:9200
+
+  opensearch12_dashboards:
+    container_name: edx.devstack.opensearch12_dashboards
+    hostname: opensearch12_dashboards.devstack.edx
+    image: opensearchproject/opensearch-dashboards:1.2.0
+    networks:
+      default:
+        aliases:
+          - edx.devstack.opensearch12_dashboards
+    depends_on:
+        - opensearch12
+    ports:
+      - "5602:5601"
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://edx.devstack.opensearch12:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
 
   firefox:
     container_name: "edx.${COMPOSE_PROJECT_NAME:-devstack}.firefox"
@@ -414,6 +446,7 @@ services:
     depends_on:
       - discovery
       - elasticsearch710
+      - opensearch12
       - forum
       - memcached
       - mongo
@@ -591,6 +624,7 @@ services:
     hostname: cms.devstack.edx
     depends_on:
       - elasticsearch710
+      - opensearch12
       - lms
       - memcached
       - mongo
