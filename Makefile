@@ -226,17 +226,23 @@ impl-dev.provision.%: dev.check-memory ## Provision specified services.
 dev.provision.%: ## Provision specified services.
 	@scripts/send_metrics.py wrap "dev.provision.$*"
 
-dev.backup: dev.up.mysql57+mysql80+mongo+elasticsearch710+opensearch12+coursegraph ## Write all data volumes to the host.
-	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.mysql57) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zcvf /backup/mysql57.tar.gz /var/lib/mysql
-	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.mysql80) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zcvf /backup/mysql80.tar.gz /var/lib/mysql
+dev.mysqldumpall: dev.up.mysql80
+	sleep 10 # give the mysql server time to fully start up
+	docker compose exec mysql80 mysqldump --all-databases > .dev/devstackall.sql
+
+dev.mysqlrestoredump: dev.up.mysql80
+	sleep 10 # give the mysql server time to fully start up
+	docker compose exec -T mysql80 mysql < .dev/devstackall.sql
+
+ ## Write all data volumes to the host, except for mysql, just use mysqldump
+dev.backup: dev.up.mongo+elasticsearch710+opensearch12+coursegraph dev.mysqldumpall
 	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.mongo) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zcvf /backup/mongo.tar.gz /data/db
 	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.elasticsearch710) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zcvf /backup/elasticsearch710.tar.gz /usr/share/elasticsearch/data
 	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.opensearch12) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zcvf /backup/opensearch12.tar.gz /usr/share/opensearch/data
 	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.coursegraph) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zcvf /backup/coursegraph.tar.gz /data
 
-dev.restore: dev.up.mysql57+mysql80+mongo+elasticsearch710+opensearch12+coursegraph ## Restore all data volumes from the host. WILL OVERWRITE ALL EXISTING DATA!
-	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.mysql57) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zxvf /backup/mysql57.tar.gz
-	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.mysql80) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zxvf /backup/mysql80.tar.gz
+ ## Restore all data volumes from the host. WILL OVERWRITE ALL EXISTING DATA!
+dev.restore: dev.up.mongo+elasticsearch710+opensearch12+coursegraph dev.mysqlrestoredump
 	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.mongo) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zxvf /backup/mongo.tar.gz
 	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.elasticsearch710) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zxvf /backup/elasticsearch710.tar.gz
 	docker run --rm --volumes-from $$(make --silent --no-print-directory dev.print-container.opensearch12) -v $$(pwd)/.dev/backups:/backup debian:jessie tar zxvf /backup/opensearch12.tar.gz

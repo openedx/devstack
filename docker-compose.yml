@@ -418,7 +418,6 @@ services:
       - memcached
       - mongo
       - mysql80
-      - mysql57
     # Allows attachment to the LMS service using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
