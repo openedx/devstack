@@ -236,6 +236,15 @@ The fix is to get a new auth session. You can do any of the following:
 4. Log in
 5. Navigate back to the MFE
 
+Blank login/signup screens
+--------------------------
+After starting LMS/CMS (and compiling static assets for both), it's possible you run into a blank page when trying to sign in via http://localhost:18000/login. 
+
+This is most likely a cache issue and can be easily fixed in 2 different ways:
+
+1. Hard reloading the page, or
+2. Rebuilding the frontend and giving it another try
+
 Missing vendor file node_modules/backbone.paginator/lib/backbone.paginator.js
 -----------------------------------------------------------------------------
 This message sometimes appears when provisioning. The root cause of this is as yet unknown but the most effective workaround seems to be
